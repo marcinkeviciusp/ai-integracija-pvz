@@ -1,25 +1,10 @@
 import streamlit as st
 import requests
 import json
-from pathlib import Path
 
 # Configuration
-API_KEY_FILE = "api_key.txt"
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODEL = "stepfun/step-3.5-flash:free"
-
-def load_api_key():
-    """Load the OpenRouter API key from api_key.txt file."""
-    try:
-        key_path = Path(API_KEY_FILE)
-        if not key_path.exists():
-            return None
-        with open(key_path, 'r') as f:
-            api_key = f.read().strip()
-            return api_key if api_key else None
-    except Exception as e:
-        st.error(f"Error reading API key file: {str(e)}")
-        return None
 
 def summarize_text(text, api_key, word_limit=100):
     """
@@ -85,24 +70,28 @@ def main():
     st.title("📝 AI Text Summarizer")
     st.markdown("Summarize your text using AI powered by OpenRouter")
     
-    # Check for API key
-    api_key = load_api_key()
-    
-    if not api_key:
-        st.error("⚠️ API key not found!")
-        st.info(f"Please create a file named `{API_KEY_FILE}` in the project root directory and paste your OpenRouter API key into it.")
-        st.markdown("""
-        ### How to get an API key:
-        1. Go to [OpenRouter](https://openrouter.ai/)
-        2. Sign up or log in
-        3. Navigate to the API Keys section
-        4. Create a new API key
-        5. Copy the key and paste it into `api_key.txt`
-        """)
-        return
-    
-    # Sidebar with information
+    # Sidebar with information and API key input
     with st.sidebar:
+        st.header("🔑 API Configuration")
+        api_key = st.text_input(
+            "Enter your OpenRouter API Key:",
+            type="password",
+            help="Get your API key from https://openrouter.ai/",
+            placeholder="sk-or-v1-..."
+        )
+        
+        if not api_key:
+            st.warning("Please enter your API key to use the summarizer.")
+            st.markdown("""
+            ### How to get an API key:
+            1. Go to [OpenRouter](https://openrouter.ai/)
+            2. Sign up or log in
+            3. Navigate to the API Keys section
+            4. Create a new API key
+            5. Copy and paste it above
+            """)
+        
+        st.divider()
         st.header("ℹ️ About")
         st.markdown(f"""
         This application uses the **{MODEL}** model to summarize text.
@@ -115,10 +104,11 @@ def main():
         
         st.header("📚 Instructions")
         st.markdown("""
-        1. Enter or paste your text in the text area
-        2. Adjust the summary length using the slider (30-150 words)
-        3. Click the "Summarize" button
-        4. Get your AI-generated summary
+        1. Enter your API key above
+        2. Enter or paste your text in the text area
+        3. Adjust the summary length using the slider (30-150 words)
+        4. Click the "Summarize" button
+        5. Get your AI-generated summary
         """)
     
     # Main content area
@@ -148,7 +138,9 @@ def main():
         summary_placeholder = st.empty()
         
         if summarize_button:
-            if not user_text or not user_text.strip():
+            if not api_key or not api_key.strip():
+                summary_placeholder.error("⚠️ Please enter your OpenRouter API key in the sidebar.")
+            elif not user_text or not user_text.strip():
                 summary_placeholder.warning("⚠️ Please enter some text to summarize.")
             else:
                 with st.spinner("Generating summary..."):
