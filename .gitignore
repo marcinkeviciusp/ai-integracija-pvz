@@ -89,3 +89,4 @@ token.json
 secrets.json
 
 api_key.txt
+.streamlit/secrets.toml
