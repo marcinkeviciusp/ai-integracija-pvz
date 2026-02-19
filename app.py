@@ -1,25 +1,10 @@
 import streamlit as st
 import requests
 import json
-from pathlib import Path
 
 # Configuration
-API_KEY_FILE = "api_key.txt"
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODEL = "stepfun/step-3.5-flash:free"
-
-def load_api_key():
-    """Load the OpenRouter API key from api_key.txt file."""
-    try:
-        key_path = Path(API_KEY_FILE)
-        if not key_path.exists():
-            return None
-        with open(key_path, 'r') as f:
-            api_key = f.read().strip()
-            return api_key if api_key else None
-    except Exception as e:
-        st.error(f"Error reading API key file: {str(e)}")
-        return None
 
 def summarize_text(text, api_key, word_limit=100):
     """
@@ -85,19 +70,25 @@ def main():
     st.title("📝 AI Text Summarizer")
     st.markdown("Summarize your text using AI powered by OpenRouter")
     
-    # Check for API key
-    api_key = load_api_key()
-    
-    if not api_key:
-        st.error("⚠️ API key not found!")
-        st.info(f"Please create a file named `{API_KEY_FILE}` in the project root directory and paste your OpenRouter API key into it.")
-        st.markdown("""
-        ### How to get an API key:
-        1. Go to [OpenRouter](https://openrouter.ai/)
-        2. Sign up or log in
-        3. Navigate to the API Keys section
-        4. Create a new API key
-        5. Copy the key and paste it into `api_key.txt`
+    # Get API key from secrets
+    try:
+        api_key = st.secrets["OPENROUTER_KEY"]
+    except KeyError:
+        st.error("⚠️ API key not configured!")
+        st.info("""
+        **For Streamlit Cloud deployment:**
+        1. Go to your app settings on Streamlit Cloud
+        2. Navigate to the Secrets section
+        3. Add your OpenRouter API key as:
+        ```
+        OPENROUTER_KEY = "your-api-key-here"
+        ```
+        
+        **For local development:**
+        Create a `.streamlit/secrets.toml` file with:
+        ```
+        OPENROUTER_KEY = "your-api-key-here"
+        ```
         """)
         return
     

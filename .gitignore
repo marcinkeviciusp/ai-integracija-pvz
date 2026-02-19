@@ -87,5 +87,6 @@ checkpoints/
 credentials.json
 token.json
 secrets.json
+.streamlit/secrets.toml
 
 api_key.txt
