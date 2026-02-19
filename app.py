@@ -21,13 +21,14 @@ def load_api_key():
         st.error(f"Error reading API key file: {str(e)}")
         return None
 
-def summarize_text(text, api_key):
+def summarize_text(text, api_key, word_limit=100):
     """
     Summarize the provided text using OpenRouter API with stepfun/step-3.5-flash:free model.
     
     Args:
         text (str): The text to summarize
         api_key (str): OpenRouter API key
+        word_limit (int): Maximum number of words for the summary (default: 100)
         
     Returns:
         str: Summarized text or error message
@@ -44,11 +45,11 @@ def summarize_text(text, api_key):
         "messages": [
             {
                 "role": "system",
-                "content": "You are a helpful assistant that creates concise and accurate summaries of text. Provide clear, well-structured summaries that capture the main points."
+                "content": f"You are a helpful assistant that creates concise and accurate summaries of text. Provide clear, well-structured summaries that capture the main points. Keep your summary to approximately {word_limit} words."
             },
             {
                 "role": "user",
-                "content": f"Please summarize the following text:\n\n{text}"
+                "content": f"Please summarize the following text in approximately {word_limit} words:\n\n{text}"
             }
         ]
     }
@@ -115,8 +116,9 @@ def main():
         st.header("📚 Instructions")
         st.markdown("""
         1. Enter or paste your text in the text area
-        2. Click the "Summarize" button
-        3. Get your AI-generated summary
+        2. Adjust the summary length using the slider (30-150 words)
+        3. Click the "Summarize" button
+        4. Get your AI-generated summary
         """)
     
     # Main content area
@@ -126,8 +128,17 @@ def main():
         st.subheader("Input Text")
         user_text = st.text_area(
             "Enter the text you want to summarize:",
-            height=400,
+            height=350,
             placeholder="Paste or type your text here..."
+        )
+        
+        word_limit = st.slider(
+            "Summary length (words):",
+            min_value=30,
+            max_value=150,
+            value=100,
+            step=10,
+            help="Adjust the approximate length of the summary"
         )
         
         summarize_button = st.button("✨ Summarize", type="primary", use_container_width=True)
@@ -141,7 +152,7 @@ def main():
                 summary_placeholder.warning("⚠️ Please enter some text to summarize.")
             else:
                 with st.spinner("Generating summary..."):
-                    summary = summarize_text(user_text, api_key)
+                    summary = summarize_text(user_text, api_key, word_limit)
                     summary_placeholder.markdown(summary)
         else:
             summary_placeholder.info("👈 Enter text and click 'Summarize' to see the result here.")
